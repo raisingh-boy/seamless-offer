@@ -1,4 +1,5 @@
 Negative Keyword,Match Type
+# --- Theater Improv (мусор) ---
 improv classes,Phrase
 improv games,Phrase
 improv prompts,Phrase
@@ -7,34 +8,54 @@ improv exercises,Phrase
 improv lesson plans,Phrase
 theatre improvisation,Phrase
 theatrical improvisation,Phrase
-jay 9 dance,Phrase
-jay9 dance centre,Phrase
-pineapple dance studios,Phrase
-kpop,Phrase
+# --- Не-наши танцевальные бренды ---
+jazz dance,Phrase
+tap dance,Phrase
+salsa,Phrase
 hip hop,Phrase
 aerial dance,Phrase
 ballet,Phrase
-contemporary,Phrase
+contemporary dance,Phrase
 choreography,Phrase
 choreographer,Phrase
-ndca,Phrase
-marameo contact jam,Phrase
-easy dance moves,Phrase
-forward dance,Phrase
-dance of 3 steps,Phrase
-make a dance choreography,Phrase
-tap dance,Phrase
-salsa,Phrase
-jazz dance,Phrase
-yoga,Phrase
+# --- LBS / offline (для онлайн курса не нужны) ---
 near me,Phrase
 local,Phrase
-free,Phrase
-cheap,Phrase
-kids,Phrase
 offline,Phrase
 school,Phrase
 classes in,Phrase
 workshops in,Phrase
 address,Phrase
 location,Phrase
+academy,Phrase
+studio,Phrase
+# --- Дети ---
+kids,Phrase
+children,Phrase
+# --- Бесплатно (не наш сегмент) ---
+free,Phrase
+cheap,Phrase
+# --- Pole dance protection (для floorwork) ---
+pole,Phrase
+pole dance,Phrase
+exotic dance,Phrase
+heels,Phrase
+stripper,Phrase
+sensual,Phrase
+lap dance,Phrase
+chair dance,Phrase
+striptease,Phrase
+burlesque,Phrase
+twerk,Phrase
+pole fitness,Phrase
+# --- Конкретный мусор из статистики ---
+jay 9 dance,Phrase
+jay9 dance centre,Phrase
+pineapple dance studios,Phrase
+kpop,Phrase
+ndca,Phrase
+marameo contact jam,Phrase
+easy dance moves,Phrase
+forward dance,Phrase
+dance of 3 steps,Phrase
+make a dance choreography,Phrase

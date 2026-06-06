@@ -1,23 +1,31 @@
 Campaign,Ad Group,Keyword,Match Type
-Sales-Search-ci beginners,Ad group 1,"contact improvisation online",Phrase
+# --- CI Beginners (Buying Intent) ---
 Sales-Search-ci beginners,Ad group 1,"contact improvisation class",Phrase
 Sales-Search-ci beginners,Ad group 1,"contact improvisation course",Phrase
-Sales-Search-ci beginners,Ad group 1,"contact improvisation beginner",Phrase
-Sales-Search-ci beginners,Ad group 1,"contact improvisation beginners",Phrase
-Sales-Search-ci beginners,Ad group 1,"contact improvisation for beginners",Phrase
-Sales-Search-ci beginners,Ad group 1,"contact improvisation lesson",Phrase
-Sales-Search-ci beginners,Ad group 1,"contact improvisation lessons",Phrase
-Sales-Search-ci beginners,Ad group 1,"contact improvisation workshop",Phrase
-Sales-Search-ci beginners,Ad group 1,"learn contact improvisation",Phrase
-Sales-Search-ci beginners,Ad group 1,"learn contact improvisation online",Phrase
-Sales-Search-ci beginners,Ad group 1,"online contact improvisation",Phrase
-Sales-Search-ci beginners,Ad group 1,"online contact improvisation course",Phrase
-Sales-Search-ci beginners,Ad group 1,"contact improvisation practice",Phrase
-Sales-Search-ci beginners,Ad group 1,"floorwork online class",Phrase
+Sales-Search-ci beginners,Ad group 1,"contact improvisation online",Phrase
 Sales-Search-ci beginners,Ad group 1,"contact improvisation online class",Phrase
 Sales-Search-ci beginners,Ad group 1,"contact improvisation online course",Phrase
-Sales-Search-ci beginners,Ad group 1,"what is contact improvisation",Phrase
 Sales-Search-ci beginners,Ad group 1,[contact improvisation class],Exact
 Sales-Search-ci beginners,Ad group 1,[contact improvisation course],Exact
 Sales-Search-ci beginners,Ad group 1,[contact improvisation online],Exact
+# --- CI Beginners (Learning Intent) ---
+Sales-Search-ci beginners,Ad group 1,"contact improvisation for beginners",Phrase
+Sales-Search-ci beginners,Ad group 1,"contact improvisation beginner",Phrase
+Sales-Search-ci beginners,Ad group 1,"learn contact improvisation",Phrase
+Sales-Search-ci beginners,Ad group 1,"learn contact improvisation online",Phrase
+Sales-Search-ci beginners,Ad group 1,"what is contact improvisation",Phrase
+Sales-Search-ci beginners,Ad group 1,"how to learn contact improvisation",Phrase
+Sales-Search-ci beginners,Ad group 1,"how to start contact improvisation",Phrase
 Sales-Search-ci beginners,Ad group 1,[contact improvisation for beginners],Exact
+# --- Dance Improvisation (шире, в Phrase) ---
+Sales-Search-ci beginners,Ad group 1,"dance improvisation",Phrase
+Sales-Search-ci beginners,Ad group 1,"improvisation dance",Phrase
+Sales-Search-ci beginners,Ad group 1,"dance improvisation class",Phrase
+Sales-Search-ci beginners,Ad group 1,"dance improvisation course",Phrase
+Sales-Search-ci beginners,Ad group 1,"improvisation dance class",Phrase
+# --- How To / Learn (общие) ---
+Sales-Search-ci beginners,Ad group 1,"learn to dance at home",Phrase
+Sales-Search-ci beginners,Ad group 1,"learn how to dance at home",Phrase
+Sales-Search-ci beginners,Ad group 1,"online dance classes for beginners",Phrase
+Sales-Search-ci beginners,Ad group 1,"learn to move freely",Phrase
+Sales-Search-ci beginners,Ad group 1,"improvisation course",Phrase
