@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SEAMLESS 2026 — The Somatic Universe</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#f5eedb;--bg2:#e8dfc4;--text:#1a1712;--muted:#7a7060;--accent:#8a7230;}
+body{background:linear-gradient(160deg,#f5eedb 0%,#e8dfc4 60%,#ddd0a8 100%);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden}
+#app{display:flex;height:100vh;width:100%}
+#canvas-wrap{flex:1;position:relative;overflow:hidden}
+#main-canvas{display:block;width:100%;height:100%}
+#sidebar{width:380px;background:rgba(255,255,255,0.7);backdrop-filter:blur(20px);border-left:1px solid rgba(255,255,255,0.8);padding:24px;overflow-y:auto;transition:transform .3s;transform:translateX(0);z-index:10}
+#sidebar.hidden{transform:translateX(100%);position:absolute;right:0;height:100%}
+#sidebar .close{float:right;background:none;border:none;font-size:24px;cursor:pointer;color:var(--muted)}
+#sidebar h2{font-family:'Space Mono',monospace;font-size:18px;margin-bottom:4px;color:var(--text)}
+#sidebar .cat{font-size:12px;color:var(--muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px}
+#sidebar .date{font-family:'Space Mono',monospace;font-size:13px;color:var(--accent);margin-bottom:12px}
+#sidebar .desc{font-size:14px;line-height:1.7;color:var(--text)}
+#sidebar .desc p{margin-bottom:10px}
+#sidebar .connections{margin-top:16px;font-size:12px;color:var(--muted)}
+#sidebar .connections span{display:inline-block;background:rgba(138,114,48,0.12);border-radius:12px;padding:3px 10px;margin:3px 4px;font-size:11px}
+#legend{position:absolute;bottom:60px;left:20px;background:rgba(255,255,255,0.65);backdrop-filter:blur(8px);border-radius:12px;padding:12px 16px;font-size:11px;color:var(--muted);border:1px solid rgba(255,255,255,0.8);z-index:5;max-width:220px}
+#legend .row{display:flex;align-items:center;gap:8px;margin:4px 0}
+#legend .line{height:2px;flex:1;min-width:24px}
+#legend .line.thick{height:3px;background:#c0392b}
+#legend .line.dashed{border-top:2px dashed #2c3e50;background:transparent}
+#legend .line.dotted{border-top:2px dotted #8e44ad}
+#legend .line.arrow{height:2px;background:#27ae60}
+#time-axis{position:absolute;bottom:0;left:0;right:0;height:50px;background:rgba(255,255,255,0.5);backdrop-filter:blur(4px);border-top:1px solid rgba(0,0,0,0.08);z-index:3;display:flex;align-items:center;padding:0 60px;overflow-x:auto}
+#time-axis .epoch{font-size:10px;color:var(--muted);white-space:nowrap;padding:0 12px;font-family:'Space Mono',monospace;position:relative}
+#time-axis .epoch::after{content:'';position:absolute;top:-12px;left:50%;width:1px;height:10px;background:rgba(0,0,0,0.1)}
+#time-axis .epoch:first-child::after{display:none}
+#header{position:absolute;top:20px;left:50%;transform:translateX(-50%);z-index:5;background:rgba(255,255,255,0.6);backdrop-filter:blur(8px);border-radius:20px;padding:8px 24px;border:1px solid rgba(255,255,255,0.8);text-align:center;white-space:nowrap}
+#header h1{font-family:'Space Mono',monospace;font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text)}
+#header .sub{font-size:10px;color:var(--muted);letter-spacing:1px;margin-top:-2px}
+#toggle-sidebar{position:absolute;top:80px;right:0;z-index:6;background:rgba(255,255,255,0.7);backdrop-filter:blur(8px);border:none;border-radius:8px 0 0 8px;padding:8px 10px;cursor:pointer;font-size:18px;color:var(--muted);border:1px solid rgba(255,255,255,0.8);border-right:none}
+.node{cursor:grab;user-select:none;touch-action:none}
+.node:active{cursor:grabbing}
+.node circle{transition:r .15s,stroke-width .15s}
+.node:hover circle{r:8;stroke-width:3}
+.node text{pointer-events:none;font-size:10px}
+.link{pointer-events:none}
+@media(max-width:768px){#sidebar{width:100%;position:fixed;top:0;right:0;bottom:0;z-index:20}#sidebar.hidden{transform:translateX(100%)}#toggle-sidebar{display:none}#header{transform:translateX(-50%) scale(.85);white-space:normal}}
+</style>
+</head>
+<body>
+<div id="app">
+<div id="canvas-wrap">
+  <div id="header">
+    <h1>SEAMLESS 2026</h1>
+    <div class="sub">The Somatic Universe</div>
+  </div>
+  <button id="toggle-sidebar" onclick="toggleSidebar()">☰</button>
+  <svg id="main-canvas"></svg>
+  <div id="legend">
+    <div class="row"><div class="line thick"></div> Historical Meeting</div>
+    <div class="row"><div class="line dashed"></div> Influence</div>
+    <div class="row"><div class="line dotted"></div> Contemporary</div>
+    <div class="row"><div class="line arrow"></div> Teacher→Student</div>
+  </div>
+  <div id="time-axis">
+    <span class="epoch">40,000 BCE</span>
+    <span class="epoch">3000 BCE</span>
+    <span class="epoch">1500 BCE</span>
+    <span class="epoch">0</span>
+    <span class="epoch">1200</span>
+    <span class="epoch">1800</span>
+    <span class="epoch">1900</span>
+    <span class="epoch">1950</span>
+    <span class="epoch">1970</span>
+    <span class="epoch">1990</span>
+    <span class="epoch">2000</span>
+    <span class="epoch">2026</span>
+  </div>
+</div>
+<div id="sidebar" class="hidden">
+  <button class="close" onclick="toggleSidebar()">✕</button>
+  <div id="sidebar-content">
+    <div style="text-align:center;color:var(--muted);padding:60px 0;font-size:14px">Click a node to explore its story</div>
+  </div>
+</div>
+</div>
+<script>
+const NODES=[{id:"san",label:"San Trance Dance",cat:"ritual",year:-40000,story:"For 40,000+ years, the San people of the Kalahari have practiced healing trance dances. Around fire with rhythmic clapping, healers enter kia (altered state) activating n/um (spiritual energy) through shaking and vibrating. This is the oldest continuous movement practice on Earth — the primordial template for every somatic practice that followed."},{id:"eleusis",label:"Eleusinian Mysteries",cat:"ritual",year:-1500,story:"For over 1000 years (1500 BCE–400 CE), initiates at Eleusis drank kykeon — a barley-based elixir now confirmed (Nature 2026) to contain ergot-derived psychedelics. The most sacred rite of Western civilization was a psychedelic-assisted mystical experience. Gordon Wasson and Albert Hofmann proposed this in 1978; a 2026 study proved ancient Greeks could process ergot into psychoactive lysergic acid amides."},{id:"yoga",label:"Yoga / Kundalini",cat:"ritual",year:-3000,story:"The most systematized ancient practice linking breath, posture, and consciousness. 5000+ years of development in the Indus Valley produced a sophisticated technology of embodiment: asana, pranayama, meditation. Yoga's influence on Western somatics — from 19th-century Transcendentalists to 1960s counterculture to modern wellness — is immeasurable."},{id:"sufi",label:"Sufi Whirling",cat:"ritual",year:1273,story:"The Mevlevi Order (Whirling Dervishes), founded by Rumi's followers in 13th-century Konya. The sema ceremony (UNESCO Intangible Heritage since 2008) is physically active meditation: spinning counter-clockwise, right palm up receiving divine energy, left palm down transmitting to earth. Directly influenced Gabrielle Roth's 5Rhythms, Gurdjieff's Sacred Dances, and modern ecstatic dance."},{id:"capoeira",label:"Capoeira",cat:"ritual",year:1500,story:"Brazilian martial art disguised as dance, created by enslaved Africans as a form of resistance and cultural survival. Combines dance, acrobatics, music, and spirituality. Embodies the principle that movement can be simultaneously combat, art, community ritual, and political expression."},{id:"darwin",label:"Darwin: Expression of Emotions",cat:"science",year:1872,story:"Charles Darwin's The Expression of the Emotions in Man and Animals proposed that emotional expressions are universal, evolved, and bodily — not cultural or mental. Directly inspired William James' body-first theory of emotion (1884). The scientific root of all embodied cognition theory."},{id:"muybridge",label:"Muybridge: Animal Locomotion",cat:"science",year:1887,story:"Eadweard Muybridge's 19,000+ sequential photographs of human and animal movement — the first time movement could be scientifically analyzed frame by frame. Directly enabled biomechanics, kinesiology, and Rudolf Laban's movement analysis."},{id:"james",label:"William James: Emotion",cat:"philosophy",year:1884,story:"William James published What is an Emotion? proposing the James-Lange theory: we feel fear because we run, not run because we fear. Emotion follows bodily changes. This was the first scientific articulation of embodied cognition — the body leads, the mind follows. Inspired by Darwin. Intellectual root of somatic psychology and Damasio's somatic marker hypothesis."},{id:"duncan",label:"Isadora Duncan",cat:"dance",year:1900,story:"American dancer who rejected ballet's rigidity for 'natural' movement inspired by Greek art, nature, and emotion. Pioneered freeform expressive dance. Influenced by Nietzsche and Whitman. Direct ancestor of modern and postmodern dance."},{id:"laban",label:"Rudolf Laban",cat:"science",year:1920,story:"Created Laban Movement Analysis (LMA) — the first comprehensive system for analyzing and notating human movement (Body, Effort, Shape, Space). His student Irmgard Bartenieff developed Bartenieff Fundamentals, a core somatic education practice. Laban's work underlies dance therapy, physical therapy, and performance analysis."},{id:"graham",label:"Martha Graham",cat:"dance",year:1926,story:"Founded the oldest dance company in America (1926). Revolutionary technique based on contraction and release — the body expressing 'the interior landscape.' Mentored Merce Cunningham, Erick Hawkins, Paul Taylor. Her Greek Cycle (Clytemnestra, Medea, Cave of the Heart) connected modern dance to archetypal mythology — influenced by and influencing Joseph Campbell. Graham: 'Movement never lies.'"},{id:"dewey",label:"Dewey: Art as Experience",cat:"philosophy",year:1934,story:"John Dewey's Art as Experience proposed aesthetic experience is continuous with life and grounded in bodily interaction with the environment. Provided the philosophical foundation for Black Mountain College (progressive education), postmodern performance, and embodied learning. Pragmatism + embodiment."},{id:"akhilananda",label:"Swami Akhilananda Circle",cat:"philosophy",year:1940,story:"Swami Akhilananda's Vedanta circle in California (1940s–50s) included Aldous Huxley, Alan Watts, Gerald Heard, and Christopher Isherwood. This group — blending Hindu Vedanta, Western mysticism, and psychedelic exploration — was the intellectual seedbed for the 1960s counterculture and the Human Potential Movement."},{id:"campbell",label:"Joseph Campbell",cat:"philosophy",year:1945,story:"Mythologist whose 'hero's journey' framework influenced everything from Star Wars to modern dance. Married Jean Erdman — former Martha Graham dancer who had Merce Cunningham in her first company. Co-founded Theater of the Open Eye (1972) with Erdman. Wrote: 'Art is the funnel through which spirit is poured into life.' Directly influenced Martha Graham's Greek myth choreography."},{id:"bmc",label:"Black Mountain College",cat:"institution",year:1948,story:"The epicenter of the American avant-garde (1933–57). Founded on Dewey's progressive education. Cage met Suzuki (Zen) here. First 'Happening' (1952). Buckminster Fuller built geodesic domes. Cunningham founded his company (1953). Direct alumni: Rauschenberg, de Kooning, Olson, Richards. From BMC: Cage→Cunningham→Judson→Paxton→Contact Improvisation."},{id:"cage",label:"John Cage",cat:"art",year:1952,story:"Met D.T. Suzuki at Columbia (1948–51) → Zen Buddhism → chance operations → 4'33\". Taught at Black Mountain College (1948, 1952, 1953). Created first 'Happening' at BMC (1952) with Cunningham, Rauschenberg, Tudor. Life partner and collaborator with Merce Cunningham. Cage's philosophy that 'everything is music' and silence is sound fundamentally reshaped modern art, dance, and performance."},{id:"cunningham",label:"Merce Cunningham",cat:"dance",year:1953,story:"Danced with Martha Graham before partnering with John Cage. Founded Merce Cunningham Dance Company at Black Mountain College (1953). Collaborated with Rauschenberg (sets), Cage (music), Warhol. Pioneered chance choreography and the separation of dance from music. Judson Dance Theater emerged from his classes. Steve Paxton danced in his company before creating Contact Improvisation."},{id:"huxley",label:"Huxley: Doors of Perception",cat:"psychedelic",year:1954,story:"In May 1953, Aldous Huxley took 400mg mescaline at his Hollywood Hills home. The Doors of Perception (1954) described his experience and became the intellectual cornerstone of the psychedelic movement. Coined 'psychedelic' with Humphry Osmond. Title borrowed from William Blake; later named The Doors band. Huxley introduced Alan Watts to Timothy Leary at Harvard. Influenced by Swami Akhilananda Vedanta circle."},{id:"sabina",label:"Wasson + Maria Sabina",cat:"psychedelic",year:1955,story:"R. Gordon Wasson — banker and amateur mycologist — participated in a Mazatec healing velada with Maria Sabina in Huautla de Jiménez, Oaxaca (June 1955). Her all-night ceremony using 'the Holy Children' (psilocybin mushrooms) was published in LIFE Magazine (1957). Wasson and Albert Hofmann visited her together in 1962 — the discoverer of LSD meeting the shaman. This event catalyzed the Western psychedelic revolution."},{id:"watts",label:"Alan Watts",cat:"philosophy",year:1955,story:"Buddhist scholar who popularized Zen for the counterculture. Involved with Swami Akhilananda circle (Huxley, Heard, Isherwood, 1951). Huxley introduced him to Leary at Harvard. Watts taught at Esalen. His synthesis of Zen, psychedelics, and Western philosophy shaped the spiritual vocabulary of the 1960s."},{id:"esalen",label:"Esalen Institute",cat:"institution",year:1962,story:"The most important institution in the Somatic Universe. Founded 1962 by Michael Murphy and Richard Price with support from Watts, Huxley, Heard, and Bateson. Hosted: Fritz Perls (Gestalt), Alan Watts, Aldous Huxley, Timothy Leary, Stanislav Grof (who created Holotropic Breathwork here in 1975), Gabrielle Roth (who created 5Rhythms here), Ida Rolf, Moshe Feldenkrais. Esalen was where Eastern spirituality, Western psychology, and somatic practice physically converged and cross-pollinated. The 5Rhythms exists because Perls asked a dancer to teach movement to his Gestalt groups."},{id:"judson",label:"Judson Dance Theater",cat:"institution",year:1962,story:"The most important dance collective of the 20th century (1962–64). Workshop at Judson Memorial Church, Greenwich Village. Core: Yvonne Rainer, Steve Paxton, Trisha Brown, Simone Forti, Lucinda Childs. Radical proposition: any movement can be dance. Emerging from Cunningham's classes at Black Mountain, Judson gave birth to Contact Improvisation (Paxton, 1972), Grand Union (1970–76), postmodern dance."},{id:"pahnke",label:"Pahnke Good Friday",cat:"psychedelic",year:1962,story:"Walter Pahnke's Good Friday Experiment at Harvard (1962) — administered psilocybin to theology students at Boston University's Marsh Chapel. Designed by Leary's Harvard team, it tested whether psychedelics could produce genuine religious experience. Connected psychedelic science with Christian mysticism. A direct bridge between Leary's research and religion."},{id:"leary",label:"Leary: Psychedelic Experience",cat:"psychedelic",year:1964,story:"Timothy Leary, Richard Alpert, and Ralph Metzner published The Psychedelic Experience: A Manual Based on the Tibetan Book of the Dead (1964). Dedicated to Huxley. Framed the psychedelic journey through Buddhism. The field guide for a generation of psychonauts. Leary conducted psilocybin research at Harvard until his dismissal in 1963. His 'turn on, tune in, drop out' became the counterculture slogan."},{id:"perls",label:"Fritz Perls: Gestalt",cat:"therapy",year:1965,story:"Psychiatrist who integrated body awareness into psychotherapy. Founder of Gestalt therapy — emphasizing present-moment awareness, body sensation, and authentic encounter. Taught at Esalen (1960s). Invited Gabrielle Roth to teach movement to his Gestalt groups — directly catalyzing the creation of 5Rhythms."},{id:"roth",label:"Gabrielle Roth: 5Rhythms",cat:"dance",year:1970,story:"Creator of 5Rhythms (Flowing, Staccato, Chaos, Lyrical, Stillness). Arrived at Esalen in her twenties; Fritz Perls invited her to teach movement to Gestalt groups. Drew from shamanism, Sufi whirling, ecstatic traditions, and human potential psychology. 5Rhythms is practiced globally as a movement meditation. Roth: 'The body is the soul presented in visible form.'"},{id:"halprin",label:"Anna Halprin",cat:"dance",year:1970,story:"Postmodern dance pioneer who survived cancer through her own movement practice. Founded Tamalpa Institute (1978) — dance as healing. In 1981, she led a ritual on Mt. Tamalpais after a murder. Huichol shaman Don Jose Mitsuwa (then 109) told her: 'This mountain is sacred. You must dance for five years.' This created the Planetary Dance, still practiced globally. Halprin directly transmitted indigenous ceremonial healing into contemporary movement practice."},{id:"paxton",label:"Steve Paxton: Contact Improv",cat:"dance",year:1972,story:"Dancer with Merce Cunningham, member of Judson Dance Theater and Grand Union. In 1972 at Oberlin College, he created Magnesium — 12 men falling, catching, colliding — which became Contact Improvisation. Influenced by Aikido's principles of blending with partner's energy. CI is now practiced worldwide as a postmodern dance form exploring shared weight, touch, and physical communication."},{id:"openeve",label:"Campbell + Erdman: Open Eye",cat:"institution",year:1972,story:"Joseph Campbell and his wife Jean Erdman (former Martha Graham dancer) founded the Theater of the Open Eye in New York City (1972–1987). Presented dance, theater, and mythology as living ritual. Embodied Campbell's idea that 'the function of art is to render the invisible visible.' The direct institutional embodiment of myth + movement."},{id:"grof",label:"Grof: Holotropic Breathwork",cat:"therapy",year:1975,story:"Stanislav Grof — Czech-born psychiatrist, pioneer of transpersonal psychology. Researched LSD psychotherapy in Czechoslovakia before moving to Esalen. In 1975 at Esalen, developed Holotropic Breathwork with his wife Christina — accelerated breathing + evocative music = non-ordinary states without substances. Proof that psychedelic terrain is accessible through breath and movement alone. Direct bridge between psychedelic therapy and somatic practice."},{id:"planetary",label:"Halprin + Mitsuwa: Planetary Dance",cat:"dance",year:1981,story:"In 1981, Anna Halprin led a purification ritual on Mt. Tamalpais. Don Jose Mitsuwa, 109-year-old Huichol shaman, visited her and said this mountain is sacred and the ritual must continue for 5 years. Thus the Planetary Dance was born — a community healing ritual blending postmodern dance with indigenous shamanism. Still practiced globally today."},{id:"mindlife",label:"Mind and Life Institute",cat:"institution",year:1987,story:"Founded by the Dalai Lama, Francisco Varela, and Adam Engle (1987). Direct meeting of Tibetan Buddhist contemplative tradition and Western cognitive science. Launched contemplative neuroscience. Funded Richard Davidson's EEG studies of meditating monks (gamma oscillations). The institutional bridge between meditation and neuroscience."},{id:"varela",label:"Varela: The Embodied Mind",cat:"philosophy",year:1991,story:"Francisco Varela, Evan Thompson, Eleanor Rosch — The Embodied Mind (1991). Synthesized Merleau-Ponty's phenomenology, Maturana's biology of cognition, and Buddhist philosophy into enactivism: cognition emerges through dynamic coupling of organism and environment. Co-founded Mind and Life Institute with Dalai Lama. The most important 20th-century text in embodied cognitive science."},{id:"damasio",label:"Damasio: Somatic Marker",cat:"science",year:1994,story:"Antonio Damasio's Descartes' Error (1994) proved through neuroscience that emotion, decision-making, and consciousness depend on body-state mapping. 'Somatic marker hypothesis': without body signals, there is no coherent self. Evidence for James' 1884 body-first theory. Directly informed by Antonio and Hanna Damasio's patient studies of ventromedial prefrontal cortex damage."},{id:"porges",label:"Porges: Polyvagal Theory",cat:"science",year:1994,story:"Stephen Porges proposed three evolutionary layers of the autonomic nervous system: ventral vagal (social engagement), sympathetic (fight/flight), dorsal vagal (shutdown/shock). Revolutionary for understanding trauma, social behavior, and therapeutic movement. Explains why TRE, 5Rhythms, and Contact Improv work: they move the nervous system from dorsal through sympathetic to ventral vagal safety."},{id:"tre",label:"TRE (Berceli)",cat:"therapy",year:2000,story:"Dr. David Berceli developed Tension & Trauma Releasing Exercises working in conflict zones across Africa and the Middle East. Watched San trance dancers and recognized neurogenic tremor as an evolutionary stress-release mechanism shared by all mammals. His 7 exercises activate tremor safely. 40,000-year-old San technology adapted for 21st-century clinical practice."},{id:"dancepd",label:"Dance for PD",cat:"therapy",year:2001,story:"Founded by Mark Morris Dance Group (2001). 25+ years of evidence that partnered dance produces measurable neuroplasticity in Parkinson's patients. MRI studies show cortical reorganization after 6 months. Dance as medicine — proving artistic practice has direct neurological therapeutic value."},{id:"interoception",label:"Interoception (Craig)",cat:"science",year:2002,story:"A.D. Craig's 2002 mapping of the lamina I spinothalamic pathway to the insula revealed interoception — the sense of the body's internal state — as the foundation of self-awareness. Higher interoceptive accuracy correlates with greater empathy but also anxiety. Interoception is trainable: somatic practices literally rewire the insula."},{id:"semaunesco",label:"Dervish Sema: UNESCO",cat:"ritual",year:2008,story:"In 2008, the Mevlevi Sema ceremony was inscribed as UNESCO Intangible Cultural Heritage of Humanity. Recognition that Rumi's 13th-century whirling practice is not just art but a living somatic-spiritual technology with universal value."},{id:"kruger",label:"Krüger: Trance Neuroscience",cat:"science",year:2022,story:"Armin Krüger's EEG studies of trance dancers (2022) show theta oscillations in the anterior cingulate cortex, prefrontal deactivation, and thalamocortical loops generating altered states. The San Bushman's 40,000-year-old practice now has a neurobiological description. Science catching up to shamanism."},{id:"embodiedai",label:"Embodied AI (DeepMind)",cat:"science",year:2025,story:"DeepMind's sensorimotor AI learns through proprioceptive feedback — intelligence through body interaction. Rodney Brooks (1991) first argued 'intelligence without representation'; Rolf Pfeifer (2015) proposed 'bodyism.' Now embodied AI converges phenomenology (Merleau-Ponty, Varela) with robotics. Machines learning through movement — the computational frontier of somatics."},{id:"kykeon2026",label:"Eleusis Kykeon Confirmed",cat:"science",year:2026,story:"2026 Nature Scientific Reports study confirmed the 1978 Wasson-Hofmann hypothesis: ancient Greeks could process ergot fungus (Claviceps purpurea) into psychoactive lysergic acid amides for the Eleusinian Mysteries' kykeon. The oldest secret rite in Western civilization was — as Huxley, Wasson, and Hofmann suspected — psychedelic."}];
+
+const LINKS=[
+  {from:"san",to:"tre",type:"influence"},
+  {from:"eleusis",to:"kykeon2026",type:"historical_meeting"},
+  {from:"eleusis",to:"sabina",type:"influence"},
+  {from:"darwin",to:"james",type:"influence"},
+  {from:"james",to:"damasio",type:"influence"},
+  {from:"james",to:"dewey",type:"influence"},
+  {from:"muybridge",to:"laban",type:"influence"},
+  {from:"graham",to:"campbell",type:"influence"},
+  {from:"graham",to:"cunningham",type:"teacher_student"},
+  {from:"dewey",to:"bmc",type:"influence"},
+  {from:"akhilananda",to:"huxley",type:"influence"},
+  {from:"akhilananda",to:"watts",type:"influence"},
+  {from:"campbell",to:"openeve",type:"historical_meeting"},
+  {from:"bmc",to:"cage",type:"historical_meeting"},
+  {from:"bmc",to:"cunningham",type:"historical_meeting"},
+  {from:"cage",to:"cunningham",type:"historical_meeting"},
+  {from:"cage",to:"judson",type:"influence"},
+  {from:"cunningham",to:"judson",type:"teacher_student"},
+  {from:"cunningham",to:"paxton",type:"teacher_student"},
+  {from:"huxley",to:"watts",type:"historical_meeting"},
+  {from:"huxley",to:"leary",type:"historical_meeting"},
+  {from:"huxley",to:"sabina",type:"influence"},
+  {from:"watts",to:"leary",type:"historical_meeting"},
+  {from:"sabina",to:"leary",type:"influence"},
+  {from:"sabina",to:"kykeon2026",type:"influence"},
+  {from:"esalen",to:"roth",type:"historical_meeting"},
+  {from:"esalen",to:"perls",type:"historical_meeting"},
+  {from:"esalen",to:"grof",type:"historical_meeting"},
+  {from:"esalen",to:"watts",type:"historical_meeting"},
+  {from:"esalen",to:"huxley",type:"historical_meeting"},
+  {from:"esalen",to:"leary",type:"historical_meeting"},
+  {from:"perls",to:"roth",type:"historical_meeting"},
+  {from:"grof",to:"tre",type:"influence"},
+  {from:"judson",to:"paxton",type:"teacher_student"},
+  {from:"paxton",to:"capoeira",type:"influence"},
+  {from:"halprin",to:"planetary",type:"historical_meeting"},
+  {from:"halprin",to:"judson",type:"same_time"},
+  {from:"sufi",to:"roth",type:"influence"},
+  {from:"roth",to:"kruger",type:"influence"},
+  {from:"james",to:"porges",type:"influence"},
+  {from:"porges",to:"tre",type:"influence"},
+  {from:"damasio",to:"interoception",type:"influence"},
+  {from:"laban",to:"roth",type:"influence"},
+  {from:"graham",to:"duncan",type:"influence"},
+  {from:"san",to:"kruger",type:"influence"},
+  {from:"varela",to:"mindlife",type:"historical_meeting"},
+  {from:"mindlife",to:"embodiedai",type:"influence"},
+  {from:"dancepd",to:"interoception",type:"same_time"},
+  {from:"semaunesco",to:"sufi",type:"historical_meeting"},
+  {from:"pahnke",to:"leary",type:"teacher_student"},
+  {from:"esalen",to:"mindlife",type:"influence"},
+  {from:"bmc",to:"judson",type:"influence"},
+  {from:"judson",to:"halprin",type:"same_time"},
+  {from:"campbell",to:"openeve",type:"historical_meeting"},
+  {from:"cunningham",to:"paxton",type:"teacher_student"},
+  {from:"san",to:"porges",type:"influence"},
+  {from:"eleusis",to:"huxley",type:"influence"},
+  {from:"huxley",to:"kykeon2026",type:"influence"},
+  {from:"watts",to:"esalen",type:"historical_meeting"},
+  {from:"graham",to:"paxton",type:"influence"},
+  {from:"sabina",to:"watts",type:"influence"},
+  {from:"leary",to:"grof",type:"influence"},
+  {from:"eleusis",to:"graham",type:"influence"},
+  {from:"james",to:"varela",type:"influence"},
+  {from:"laban",to:"dancepd",type:"influence"},
+  {from:"yoga",to:"watts",type:"influence"},
+  {from:"yoga",to:"esalen",type:"influence"},
+  {from:"duncan",to:"graham",type:"influence"},
+  {from:"bmc",to:"openeve",type:"influence"},
+  {from:"cage",to:"mindlife",type:"influence"},
+  {from:"interoception",to:"kruger",type:"influence"},
+  {from:"tre",to:"dancepd",type:"same_time"},
+  {from:"damasio",to:"embodiedai",type:"influence"},
+  {from:"akhilananda",to:"esalen",type:"influence"},
+  {from:"dewey",to:"cage",type:"influence"},
+  {from:"graham",to:"dancepd",type:"influence"},
+  {from:"halprin",to:"roth",type:"same_time"},
+  {from:"sufi",to:"graham",type:"influence"},
+  {from:"capoeira",to:"cunningham",type:"influence"}
+];
+
+const CAT_COLORS={ritual:"#8B4513",philosophy:"#2F4F4F",science:"#4169E1",therapy:"#8A2BE2",dance:"#CD5C5C",psychedelic:"#FF8C00",institution:"#2E8B57",art:"#DA70D6"};
+const CAT_LABELS={ritual:"Ritual",philosophy:"Philosophy",science:"Science",therapy:"Therapy",dance:"Dance/Movement",psychedelic:"Psychedelic",institution:"Institution",art:"Art"};
+
+const SVG=document.getElementById('main-canvas');
+const WRAP=document.getElementById('canvas-wrap');
+let W=WRAP.clientWidth,H=WRAP.clientHeight;
+let dragged=null,dx=0,dy=0;
+
+const YEAR_MIN=-40000,YEAR_MAX=2026;
+const PAD_TOP=80,PAD_BOTTOM=100;
+const PAD_LEFT=120,PAD_RIGHT=60;
+
+function yearToY(y){return PAD_TOP+(1-(y-YEAR_MIN)/(YEAR_MAX-YEAR_MIN))*(H-PAD_TOP-PAD_BOTTOM)}
+
+function resize(){W=WRAP.clientWidth;H=WRAP.clientHeight;SVG.setAttribute('viewBox','0 0 '+W+' '+H);render()}
+
+function render(){
+  SVG.innerHTML='';
+  const grp=document.createElementNS('http://www.w3.org/2000/svg','g');
+  const defs=document.createElementNS('http://www.w3.org/2000/svg','defs');
+  SVG.appendChild(defs);
+  
+  // Arrows
+  const marker=document.createElementNS('http://www.w3.org/2000/svg','marker');
+  marker.setAttribute('id','arrow');
+  marker.setAttribute('markerWidth','8');
+  marker.setAttribute('markerHeight','6');
+  marker.setAttribute('refX','8');
+  marker.setAttribute('refY','3');
+  marker.setAttribute('orient','auto');
+  const arrowPath=document.createElementNS('http://www.w3.org/2000/svg','path');
+  arrowPath.setAttribute('d','M0,0 L8,3 L0,6');
+  arrowPath.setAttribute('fill','#27ae60');
+  marker.appendChild(arrowPath);
+  defs.appendChild(marker);
+  
+  // Time axis labels
+  for(let y=YEAR_MIN;y<=YEAR_MAX;y+=Math.ceil((YEAR_MAX-YEAR_MIN)/12)){
+    const ty=yearToY(y);
+    const txt=document.createElementNS('http://www.w3.org/2000/svg','text');
+    txt.setAttribute('x',PAD_LEFT-5);
+    txt.setAttribute('y',ty+3);
+    txt.setAttribute('font-size','9');
+    txt.setAttribute('fill','#7a7060');
+    txt.setAttribute('text-anchor','end');
+    txt.setAttribute('font-family','Space Mono,monospace');
+    txt.textContent=y<=0?Math.abs(y)+' BCE':y+' CE';
+    grp.appendChild(txt);
+    
+    const line=document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1',PAD_LEFT);
+    line.setAttribute('y1',ty);
+    line.setAttribute('x2',W-PAD_RIGHT);
+    line.setAttribute('y2',ty);
+    line.setAttribute('stroke','rgba(0,0,0,0.04)');
+    line.setAttribute('stroke-width','1');
+    grp.appendChild(line);
+  }
+
+  // Links
+  LINKS.forEach(l=>{
+    const fromN=NODES.find(n=>n.id===l.from);
+    const toN=NODES.find(n=>n.id===l.to);
+    if(!fromN||!toN)return;
+    const x1=NODEX[fromN.id]||(PAD_LEFT+Math.random()*(W-PAD_LEFT-PAD_RIGHT));
+    const x2=NODEX[toN.id]||(PAD_LEFT+Math.random()*(W-PAD_LEFT-PAD_RIGHT));
+    const y1=yearToY(fromN.year);
+    const y2=yearToY(toN.year);
+    
+    const link=document.createElementNS('http://www.w3.org/2000/svg','line');
+    link.setAttribute('x1',x1);
+    link.setAttribute('y1',y1);
+    link.setAttribute('x2',x2);
+    link.setAttribute('y2',y2);
+    
+    if(l.type==='historical_meeting'){
+      link.setAttribute('stroke','#c0392b');
+      link.setAttribute('stroke-width','3');
+    }else if(l.type==='influence'){
+      link.setAttribute('stroke','#2c3e50');
+      link.setAttribute('stroke-width','1.5');
+      link.setAttribute('stroke-dasharray','6,4');
+    }else if(l.type==='same_time'){
+      link.setAttribute('stroke','#8e44ad');
+      link.setAttribute('stroke-width','1.5');
+      link.setAttribute('stroke-dasharray','2,4');
+    }else if(l.type==='teacher_student'){
+      link.setAttribute('stroke','#27ae60');
+      link.setAttribute('stroke-width','1.5');
+      link.setAttribute('marker-end','url(#arrow)');
+    }
+    link.setAttribute('opacity','0.5');
+    link.classList.add('link');
+    link.dataset.from=l.from;
+    link.dataset.to=l.to;
+    grp.appendChild(link);
+  });
+
+  // Nodes
+  const nodeMap={};
+  NODES.forEach((n,i)=>{
+    const x=n.x||(PAD_LEFT+50+Math.random()*(W-PAD_LEFT-PAD_RIGHT-100));
+    const y=yearToY(n.year);
+    const color=CAT_COLORS[n.cat]||'#999';
+    const g=document.createElementNS('http://www.w3.org/2000/svg','g');
+    g.classList.add('node');
+    g.dataset.id=n.id;
+    g.style.cursor='grab';
+    
+    const circle=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    circle.setAttribute('cx',0);
+    circle.setAttribute('cy',0);
+    circle.setAttribute('r','6');
+    circle.setAttribute('fill',color);
+    circle.setAttribute('stroke','rgba(255,255,255,0.8)');
+    circle.setAttribute('stroke-width','2');
+    g.appendChild(circle);
+    
+    const txt=document.createElementNS('http://www.w3.org/2000/svg','text');
+    txt.setAttribute('x',10);
+    txt.setAttribute('y',3);
+    txt.setAttribute('font-size','10');
+    txt.setAttribute('fill','#1a1712');
+    txt.setAttribute('font-family','DM Sans,sans-serif');
+    txt.textContent=n.label;
+    g.appendChild(txt);
+    
+    g.setAttribute('transform','translate('+x+','+y+')');
+    
+    // Store position
+    nodeMap[n.id]={x,y,g};
+    NODEX[n.id]=x;
+    NODEY[n.id]=y;
+    
+    // Click
+    g.addEventListener('click',(e)=>{e.stopPropagation();showNode(n.id)});
+    
+    // Drag
+    g.addEventListener('mousedown',(e)=>{
+      dragged=n.id;
+      const rect=WRAP.getBoundingClientRect();
+      dx=e.clientX-rect.left-SVG.getBoundingClientRect().left-parseFloat(g.getAttribute('transform').split(',')[0].split('(')[1]);
+      dy=e.clientY-rect.top-SVG.getBoundingClientRect().top-parseFloat(g.getAttribute('transform').split(',')[1].split(')')[0]);
+      g.style.cursor='grabbing';
+    });
+    
+    grp.appendChild(g);
+  });
+
+  SVG.appendChild(grp);
+}
+
+const NODEX={},NODEY={};
+
+// Initial random positions
+NODES.forEach(n=>{
+  if(!n.x)n.x=PAD_LEFT+80+Math.random()*(W-PAD_LEFT-PAD_RIGHT-160)+1;
+});
+
+// Mouse move / up
+document.addEventListener('mousemove',(e)=>{
+  if(!dragged)return;
+  const rect=SVG.getBoundingClientRect();
+  const cx=e.clientX-rect.left-dx;
+  const cy=e.clientY-rect.top-dy;
+  const g=SVG.querySelector('.node[data-id="'+dragged+'"]');
+  if(g){
+    g.setAttribute('transform','translate('+cx+','+cy+')');
+    NODEX[dragged]=cx;
+    NODEY[dragged]=cy;
+    // Re-render links
+    renderLinks();
+  }
+});
+
+document.addEventListener('mouseup',()=>{
+  if(dragged){
+    const g=SVG.querySelector('.node[data-id="'+dragged+'"]');
+    if(g)g.style.cursor='grab';
+    dragged=null;
+  }
+});
+
+// Touch
+document.addEventListener('touchmove',(e)=>{
+  if(!dragged)return;
+  const touch=e.touches[0];
+  const rect=SVG.getBoundingClientRect();
+  const cx=touch.clientX-rect.left-dx;
+  const cy=touch.clientY-rect.top-dy;
+  const g=SVG.querySelector('.node[data-id="'+dragged+'"]');
+  if(g){
+    g.setAttribute('transform','translate('+cx+','+cy+')');
+    NODEX[dragged]=cx;
+    NODEY[dragged]=cy;
+    renderLinks();
+  }
+},{passive:true});
+
+document.addEventListener('touchstart',(e)=>{
+  const touch=e.touches[0];
+  const el=document.elementFromPoint(touch.clientX,touch.clientY);
+  if(el&&el.closest('.node')){
+    const id=el.closest('.node').dataset.id;
+    dragged=id;
+    const rect=SVG.getBoundingClientRect();
+    dx=touch.clientX-rect.left-NODEX[id];
+    dy=touch.clientY-rect.top-NODEY[id];
+  }
+},{passive:true});
+
+document.addEventListener('touchend',()=>{dragged=null},{passive:true});
+
+function renderLinks(){
+  SVG.querySelectorAll('.link').forEach(l=>{
+    const from=l.dataset.from;
+    const to=l.dataset.to;
+    if(NODEX[from]&&NODEX[to]){
+      l.setAttribute('x1',NODEX[from]);
+      l.setAttribute('y1',NODEY[from]||yearToY(NODES.find(n=>n.id===from).year));
+      l.setAttribute('x2',NODEX[to]);
+      l.setAttribute('y2',NODEY[to]||yearToY(NODES.find(n=>n.id===to).year));
+    }
+  });
+}
+
+function showNode(id){
+  const n=NODES.find(x=>x.id===id);
+  if(!n)return;
+  const side=document.getElementById('sidebar');
+  side.classList.remove('hidden');
+  const content=document.getElementById('sidebar-content');
+  const color=CAT_COLORS[n.cat]||'#999';
+  const connected=LINKS.filter(l=>l.from===id||l.to===id).map(l=>{
+    const otherId=l.from===id?l.to:l.from;
+    const other=NODES.find(x=>x.id===otherId);
+    return other?other.label:otherId;
+  });
+  
+  let html='<h2 style="border-left:3px solid '+color+';padding-left:10px">'+n.label+'</h2>';
+  html+='<div class="cat">'+CAT_LABELS[n.cat]+'</div>';
+  html+='<div class="date">'+(n.year<0?Math.abs(n.year)+' BCE':n.year+' CE')+'</div>';
+  html+='<div class="desc">'+n.story.split('\n').map(p=>'<p>'+p+'</p>').join('')+'</div>';
+  if(connected.length){
+    html+='<div class="connections">Connections: '+connected.map(c=>'<span>'+c+'</span>').join('')+'</div>';
+  }
+  content.innerHTML=html;
+}
+
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('hidden');
+}
+
+// Init
+function init(){
+  resize();
+  window.addEventListener('resize',resize);
+}
+
+init();
+</script>
+</body>
+</html>
